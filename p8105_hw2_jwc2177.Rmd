@@ -1,14 +1,111 @@
 ---
 title: "P8105 - Homework 2"
-author: "Jake W. Coldiron - jwc2177"
-date: "2023-10-04"
-output: pdf_document
+author: "Jake W. Coldiron - jwc2177 -"
+date: "4 October 2023"
+output: github_document
 ---
 
-```{r setup}
+Before we begin, let's initialize a few helpful libraries since we're working with .csv files and .xlsx files.
+
+
+```{r Initialize Libraries, collapse = TRUE}
+#Initialize Libraries
+
 library(tidyverse)
+
 library(readxl)
-library(haven)
 ```
 
+# I. Problem 1
 
+This problem uses the FiveThirtyEight data; these data were gathered to create the interactive graphic on this page. In particular, we’ll use the data in pols-month.csv, unemployment.csv, and snp.csv. Our goal is to merge these into a single data frame using year and month as keys across datasets.
+
+## i. pols-month.csv
+
+First, clean the data in pols-month.csv:
+
+1. Use separate() to break up the variable mon into integer variables year, month, and day;
+1. replace month number with month name; 
+1. create a president variable taking values gop and dem, and remove prez_dem and prez_gop; 
+1. and remove the day variable.
+
+```{r pols_month piped and cleaned}
+#pols_month piped and cleaned
+
+pols_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/pols-month.csv") %>% 
+  separate(mon, into = c("year", "month"), sep = 4) %>% 
+  separate(month, into = c("month", "day"), sep = 4) %>% 
+  mutate(month = recode(month, "-01-" = "january", "-02-" = "february", "-03-" = "march", "-04-" = "april", "-05-" = "may", "-06-" = "june", "-07-" = "july", "-08-" = "august", "-09-" = "september", "-10-" = "october", "-11-" = "november", "-12-" = "december")) %>% 
+  pivot_longer(
+    c("prez_gop", "prez_dem"),
+    names_to = "prez",
+    values_to = "whitehouse"
+    ) %>% 
+  mutate(prez = recode(prez, "prez_gop" = "gop", "prez_dem" = "dem")) %>% 
+  
+#Apparently there was a value of 2 for the President in September 1974, October 1974, November 1974, and December 1974. This does not make sense as the US only has one President at a time. 
+  
+#The value is likely referring to the resignation of Richard Nixon. Immediately after Nixon resigned on 9 August 1974, his  Vice President Gerald Ford was sworn in as President. If there was going to be a value of 2 for the President, then August 1974 would make the most sense, however there is no value of 2 in August 1974 only the aforementioned months. 
+  
+#There is no explanation for this.
+  
+#Regardless, the data was processed as given.
+  
+  mutate(whitehouse = recode(whitehouse, "0" = "no", "1" = "yes", "2" = "yes")) %>% 
+  select(-day) %>% 
+  relocate(year, month, prez, whitehouse, gov_dem, gov_gop, rep_dem, rep_gop, sen_dem, sen_gop)
+
+pols_df
+```
+
+## ii. snp.csv
+
+Second, clean the data in snp.csv using a similar process to the above. For consistency across datasets:
+
+1. arrange according to year and month, 
+1. and organize so that year and month are the leading columns.
+
+```{r snp piped and cleaned}
+#snp piped and cleaned
+
+snp_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/snp.csv") %>%
+  separate(date, into = c("month", "day", "year"))
+
+snp_df
+```
+
+```{r}
+  separate(mon, into = c("year", "month"), sep = 4) %>% 
+  separate(month, into = c("month", "day"), sep = 4) %>% 
+  mutate(month = recode(month, "-01-" = "january", "-02-" = "february", "-03-" = "march", "-04-" = "april", "-05-" = "may", "-06-" = "june", "-07-" = "july", "-08-" = "august", "-09-" = "september", "-10-" = "october", "-11-" = "november", "-12-" = "december")) %>% 
+  pivot_longer(
+    c("prez_gop", "prez_dem"),
+    names_to = "prez",
+    values_to = "whitehouse"
+    ) %>% 
+  mutate(prez = recode(prez, "prez_gop" = "gop", "prez_dem" = "dem")) %>% 
+  
+#Apparently there was a value of 2 for the President in September 1974, October 1974, November 1974, and December 1974. This does not make sense as the US only has one President at a time. 
+  
+#The value is likely referring to the resignation of Richard Nixon. Immediately after Nixon resigned on 9 August 1974, his then Vice President Gerald Ford was sworn in as President. If there was going to be a value of 2 for the President, then August 1974 would make the most sense, however there is no value of 2 in August 1974 only the aforementioned months. 
+  
+#There is no explanation for this.
+  
+#Regardless, the data was processed as given.
+  
+
+
+```
+
+## iii. unemployment.csv
+
+Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
+
+## iv. Joining the Datasets 
+
+Fourth, join the datasets by merging snp into pols, and merging unemployment into the result.
+
+
+## v. Describing the Joined Dataset 
+
+Fifth, write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
