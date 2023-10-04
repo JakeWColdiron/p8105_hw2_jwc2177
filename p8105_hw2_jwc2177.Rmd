@@ -47,9 +47,7 @@ pols_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/pols-month
   
 #The value is likely referring to the resignation of Richard Nixon. Immediately after Nixon resigned on 9 August 1974, his  Vice President Gerald Ford was sworn in as President. If there was going to be a value of 2 for the President, then August 1974 would make the most sense, however there is no value of 2 in August 1974 only the aforementioned months. 
   
-#There is no explanation for this.
-  
-#Regardless, the data was processed as given.
+#This doesn't make much sense. Regardless, the data was processed as given.
   
   mutate(whitehouse = recode(whitehouse, "0" = "no", "1" = "yes", "2" = "yes")) %>% 
   select(-day) %>% 
@@ -69,12 +67,38 @@ Second, clean the data in snp.csv using a similar process to the above. For cons
 #snp piped and cleaned
 
 snp_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/snp.csv") %>%
-  separate(date, into = c("month", "day", "year"))
+  separate(date, into = c("month", "day", "year")) %>% 
+  mutate(month = recode(month, "1" = "01", "2" = "02","3" = "03","4" = "04","5" = "05","6" = "06","7" = "07","8" = "08","9" = "09",)) %>% 
+  mutate(day = recode(day, "1" = "01", "2" = "02","3" = "03","4" = "04")) %>% 
+  mutate(year = paste("20", year, sep = "")) %>% 
+  mutate(year = as.numeric(year)) %>% 
+  mutate(year = ifelse(year > 2015, year - 100, year)) %>% 
+  select(-day) %>% 
+  relocate(year, month, close) %>% 
+  rename(snp_close = close)
 
 snp_df
 ```
 
-```{r}
+
+## iii. unemployment.csv
+
+Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
+
+```{r unemployment piped and cleaned}
+#unemployment piped and cleaned
+
+unemployment_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/unemployment.csv") 
+
+
+
+unemployment_df
+```
+
+```{r unemployment piped and cleaned, eval = false}
+#unemployment piped and cleaned
+
+unemployment_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/unemployment.csv") %>% 
   separate(mon, into = c("year", "month"), sep = 4) %>% 
   separate(month, into = c("month", "day"), sep = 4) %>% 
   mutate(month = recode(month, "-01-" = "january", "-02-" = "february", "-03-" = "march", "-04-" = "april", "-05-" = "may", "-06-" = "june", "-07-" = "july", "-08-" = "august", "-09-" = "september", "-10-" = "october", "-11-" = "november", "-12-" = "december")) %>% 
@@ -84,22 +108,12 @@ snp_df
     values_to = "whitehouse"
     ) %>% 
   mutate(prez = recode(prez, "prez_gop" = "gop", "prez_dem" = "dem")) %>% 
-  
-#Apparently there was a value of 2 for the President in September 1974, October 1974, November 1974, and December 1974. This does not make sense as the US only has one President at a time. 
-  
-#The value is likely referring to the resignation of Richard Nixon. Immediately after Nixon resigned on 9 August 1974, his then Vice President Gerald Ford was sworn in as President. If there was going to be a value of 2 for the President, then August 1974 would make the most sense, however there is no value of 2 in August 1974 only the aforementioned months. 
-  
-#There is no explanation for this.
-  
-#Regardless, the data was processed as given.
-  
+  mutate(whitehouse = recode(whitehouse, "0" = "no", "1" = "yes", "2" = "yes")) %>% 
+  select(-day) %>% 
+  relocate(year, month, prez, whitehouse, gov_dem, gov_gop, rep_dem, rep_gop, sen_dem, sen_gop)
 
 
 ```
-
-## iii. unemployment.csv
-
-Third, tidy the unemployment data so that it can be merged with the previous datasets. This process will involve switching from “wide” to “long” format; ensuring that key variables have the same name; and ensuring that key variables take the same values.
 
 ## iv. Joining the Datasets 
 
