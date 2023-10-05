@@ -14,8 +14,6 @@ Before we begin, let's initialize a few helpful libraries since we're working wi
 library(tidyverse)
 
 library(readxl)
-
-library(writexl)
 ```
 
 # I. Problem 1
@@ -40,7 +38,7 @@ pols_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/pols-month
   
   separate(month, into = c("month", "day"), sep = 4) %>% 
   
-   mutate(year = as.numeric(year)) %>% 
+  mutate(year = as.numeric(year)) %>% 
   
   mutate(month = recode(month, "-01-" = "january", "-02-" = "february", "-03-" = "march", "-04-" = "april", "-05-" = "may", "-06-" = "june", "-07-" = "july", "-08-" = "august", "-09-" = "september", "-10-" = "october", "-11-" = "november", "-12-" = "december")) %>% 
   
@@ -302,6 +300,8 @@ mr_prof_df =
 trash_wheel_family_df = 
   bind_rows(mr_prof_df, gwynnda_df)
 
+trash_wheel_family_df = relocate(trash_wheel_family_df, year, month, day)
+
 trash_wheel_family_df
 
 #verify
@@ -312,7 +312,7 @@ tail(trash_wheel_family_df)
 
 v. Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of cigarette butts collected by Gwynnda in July of 2021?
 
-> 
+> There are 846 total observations in the data. The aforementioned key variables are merely year, month, and day as these are the only numbers that are ubiqitous throughout all datasets. Mr. Trash Wheel collected 216 metric tons of trash, and Gwynnda collected 16,300 butts in July 2021.
 
 
 # III. Problem 3
@@ -348,7 +348,9 @@ mci_baseline = read_csv("./p8105_hw2_jwc2177_data/data_mci/MCI_baseline.csv", sk
   
   mutate(sex = recode(sex, "0" = "female", "1" = "male")) %>% 
   
-  mutate(apoe4_carrier_status = recode(apoe4_carrier_status, "0" = "noncarrier", "1" = "carrier"))
+  mutate(apoe4_carrier_status = recode(apoe4_carrier_status, "0" = "noncarrier", "1" = "carrier")) %>% 
+  
+  mutate(id = as.numeric(id)) 
   
 mci_baseline
 ```
@@ -358,18 +360,20 @@ mci_baseline
 
 Discuss important steps in the import process and relevant features of the dataset. 
 
+> It is important to tidy the data in the data import process, i.e., take the data from human-readable form to computer-readable form. This primarily involves ommiting data under certian criteria, renaming variables, recoding values, as well as pivoting and binding multiple dataframes.
+
 1. How many participants were recruited, and of these how many develop MCI? 
+
+> 483 participants were recurited. 
+
 1. What is the average baseline age? What proportion of women in the study are APOE4 carriers?
+
+> The average baseline age was 65.01. 
+> The sum of sex is 272 and given 483 total paritpants, this means 56.31% were male meaning 43.69% are female. 
 
 ## i3. Import and Clean and Tidy Amyloid β
 
 Similarly, import, clean, and tidy the dataset of longitudinally observed biomarker values; comment on the steps on the import process and the features of the dataset.
-
-```{r}
-#view(mci_amyloid_full)
-
-mci_amyloid_full = read_csv("./p8105_hw2_jwc2177_data/data_mci/mci_amyloid.csv")  
-```
 
 
 ```{r import and clean basline amyloid β}
@@ -378,7 +382,11 @@ mci_amyloid_full = read_csv("./p8105_hw2_jwc2177_data/data_mci/mci_amyloid.csv")
 
 mci_amyloid = read_csv("./p8105_hw2_jwc2177_data/data_mci/mci_amyloid.csv", skip = 1)  %>% 
   
-  janitor::clean_names() 
+  janitor::clean_names() %>% 
+  
+  rename(id = study_id) %>% 
+  
+  mutate(id = as.numeric(id)) 
   
 
 mci_amyloid
@@ -386,5 +394,31 @@ mci_amyloid
 
 ## iii. Cross-Refrenceing Baseline and Amyloid β
 
-Check whether some participants appear in only the baseline or amyloid datasets, and comment on your findings. Combine the demographic and biomarker datasets so that only participants who appear in both datasets are retained, and briefly describe the resulting dataset; export the result as a CSV to your data directory.
+Check whether some participants appear in only the baseline or amyloid datasets, and comment on your findings. 
+
+> Yes, mci_amyloid has four more data entries than mci_baseline. mci_amyloid has 487 participants but mci_baseline has 483 participants. 
+
+## iv. Cleaning and Combining Baseline and Amyloid β
+
+```{r ommiting extranous rows}
+#ommiting extranous rows
+#view(mci_amyloid)
+
+mci_amyloid = subset(mci_amyloid , id != 487) 
+
+mci_amyloid = subset(mci_amyloid , id != 486) 
+
+mci_amyloid = subset(mci_amyloid , id != 485) 
+
+mci_amyloid = subset(mci_amyloid , id != 484) 
+
+mci_amyloid
+```
+
+Combine the demographic and biomarker datasets so that only participants who appear in both datasets are retained, and briefly describe the resulting dataset; export the result as a CSV to your data directory.
+
+```{r}
+
+```
+
 
