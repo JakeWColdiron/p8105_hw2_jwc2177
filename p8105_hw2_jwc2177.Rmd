@@ -33,14 +33,19 @@ First, clean the data in pols-month.csv:
 #pols_month piped and cleaned
 
 pols_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/pols-month.csv") %>% 
+  
   separate(mon, into = c("year", "month"), sep = 4) %>% 
+  
   separate(month, into = c("month", "day"), sep = 4) %>% 
+  
   mutate(month = recode(month, "-01-" = "january", "-02-" = "february", "-03-" = "march", "-04-" = "april", "-05-" = "may", "-06-" = "june", "-07-" = "july", "-08-" = "august", "-09-" = "september", "-10-" = "october", "-11-" = "november", "-12-" = "december")) %>% 
+  
   pivot_longer(
     c("prez_gop", "prez_dem"),
     names_to = "prez",
     values_to = "whitehouse"
     ) %>% 
+  
   mutate(prez = recode(prez, "prez_gop" = "gop", "prez_dem" = "dem")) %>% 
   
 #Apparently there was a value of 2 for the President in September 1974, October 1974, November 1974, and December 1974. This does not make sense as the US only has one President at a time. 
@@ -50,7 +55,9 @@ pols_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/pols-month
 #This doesn't make much sense. Regardless, the data was processed as given.
   
   mutate(whitehouse = recode(whitehouse, "0" = "no", "1" = "yes", "2" = "yes")) %>% 
+  
   select(-day) %>% 
+  
   relocate(year, month, prez, whitehouse, gov_dem, gov_gop, rep_dem, rep_gop, sen_dem, sen_gop)
 
 pols_df
@@ -68,13 +75,19 @@ Second, clean the data in snp.csv using a similar process to the above. For cons
 
 snp_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/snp.csv") %>%
   separate(date, into = c("month", "day", "year")) %>% 
-  mutate(month = recode(month, "1" = "01", "2" = "02","3" = "03","4" = "04","5" = "05","6" = "06","7" = "07","8" = "08","9" = "09",)) %>% 
-  mutate(day = recode(day, "1" = "01", "2" = "02","3" = "03","4" = "04")) %>% 
+  
+  mutate(month = recode(month, "1" = "january", "2" = "february","3" = "march","4" = "april","5" = "may","6" = "june","7" = "july","8" = "august","9" = "september","10" = "october","11" = "november","12" = "december")) %>% 
+  
   mutate(year = paste("20", year, sep = "")) %>% 
+  
   mutate(year = as.numeric(year)) %>% 
+  
   mutate(year = ifelse(year > 2015, year - 100, year)) %>% 
+  
   select(-day) %>% 
+  
   relocate(year, month, close) %>% 
+  
   rename(snp_close = close)
 
 snp_df
@@ -88,30 +101,29 @@ Third, tidy the unemployment data so that it can be merged with the previous dat
 ```{r unemployment piped and cleaned}
 #unemployment piped and cleaned
 
-unemployment_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/unemployment.csv") 
-
-
+unemployment_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/unemployment.csv") %>%
+  
+  janitor::clean_names() %>% 
+  
+  pivot_longer(
+    jan:dec,
+    names_to = "month",
+    values_to = "unemployment_percent"
+  ) %>% 
+  
+  mutate(month = recode(month, "jan" = "january", "feb" = "february", "mar" = "march", "apr" = "april", "may" = "may", "jun" = "june", "jul" = "july", "aug" = "august", "sep" = "september", "oct" = "october", "nov" = "november", "dec" = "december"))
+  
 
 unemployment_df
+
 ```
 
-```{r unemployment piped and cleaned, eval = false}
+```{r, eval = false}
 #unemployment piped and cleaned
 
-unemployment_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/unemployment.csv") %>% 
-  separate(mon, into = c("year", "month"), sep = 4) %>% 
-  separate(month, into = c("month", "day"), sep = 4) %>% 
-  mutate(month = recode(month, "-01-" = "january", "-02-" = "february", "-03-" = "march", "-04-" = "april", "-05-" = "may", "-06-" = "june", "-07-" = "july", "-08-" = "august", "-09-" = "september", "-10-" = "october", "-11-" = "november", "-12-" = "december")) %>% 
-  pivot_longer(
-    c("prez_gop", "prez_dem"),
-    names_to = "prez",
-    values_to = "whitehouse"
-    ) %>% 
-  mutate(prez = recode(prez, "prez_gop" = "gop", "prez_dem" = "dem")) %>% 
-  mutate(whitehouse = recode(whitehouse, "0" = "no", "1" = "yes", "2" = "yes")) %>% 
-  select(-day) %>% 
-  relocate(year, month, prez, whitehouse, gov_dem, gov_gop, rep_dem, rep_gop, sen_dem, sen_gop)
-
+unemployment_df_test = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/unemployment.csv") %>% 
+  
+  janitor::clean_names()
 
 ```
 
