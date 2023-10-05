@@ -38,6 +38,8 @@ pols_df = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/pols-month
   
   separate(month, into = c("month", "day"), sep = 4) %>% 
   
+   mutate(year = as.numeric(year)) %>% 
+  
   mutate(month = recode(month, "-01-" = "january", "-02-" = "february", "-03-" = "march", "-04-" = "april", "-05-" = "may", "-06-" = "june", "-07-" = "july", "-08-" = "august", "-09-" = "september", "-10-" = "october", "-11-" = "november", "-12-" = "december")) %>% 
   
   pivot_longer(
@@ -118,18 +120,21 @@ unemployment_df
 
 ```
 
-```{r, eval = false}
-#unemployment piped and cleaned
-
-unemployment_df_test = read_csv("./p8105_hw2_jwc2177_data/fivethirtyeight_datasets/unemployment.csv") %>% 
-  
-  janitor::clean_names()
-
-```
-
 ## iv. Joining the Datasets 
 
 Fourth, join the datasets by merging snp into pols, and merging unemployment into the result.
+
+```{r, joining the table together}
+#joining the table together
+
+snp_into_pol =
+  left_join(pols_df, snp_df)
+
+five_thirty_eight = 
+  left_join(snp_into_pol, unemployment_df)
+
+five_thirty_eight
+```
 
 
 ## v. Describing the Joined Dataset 
