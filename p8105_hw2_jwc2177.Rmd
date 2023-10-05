@@ -14,6 +14,8 @@ Before we begin, let's initialize a few helpful libraries since we're working wi
 library(tidyverse)
 
 library(readxl)
+
+library(writexl)
 ```
 
 # I. Problem 1
@@ -140,3 +142,160 @@ five_thirty_eight
 ## v. Describing the Joined Dataset 
 
 Fifth, write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
+
+<br>
+
+# II. Problem 2
+
+This problem uses the Mr. Trash Wheel data set, available as an Excel file on the course website.
+
+## ii. Import and Clean Mr. Trash Wheel
+
+Read and clean the Mr. Trash Wheel sheet:
+
+* specify the sheet in the Excel file and to omit non-data entries (rows with notes / figures; columns containing notes) using arguments in read_excel
+* use reasonable variable names
+* omit rows that do not include dumpster-specific data
+
+```{r import and clean trash wheel data}
+#import and clean trash wheel data
+#view(trash_wheel_mr_df)
+
+trash_wheel_mr_df = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 1) %>% 
+  
+  janitor::clean_names() %>% 
+  
+  select(-x15, -x16) %>% 
+  
+  mutate(month = str_to_lower(month)) %>% 
+  
+  separate(date, into = c("year2", "month2", "day")) %>% 
+  
+  select(-year2, -month2) %>% 
+  
+  relocate(dumpster, year, month, day) %>% 
+  
+  mutate(year = as.numeric(year)) %>% 
+  
+  mutate(trash_wheel_name = "trash_wheel_mr") %>% 
+  
+  relocate(trash_wheel_name)
+
+trash_wheel_df
+```
+
+
+##. iii. New Homes Powered
+
+The data include a column for the (approximate) number of homes powered. This calculation is described in the Homes powered note, but not applied to every row in the dataset. Update the data to include a new homes_powered variable based on this calculation.
+
+```{r new homes powered}
+#new homes powered
+
+#note: new homes powered (nhp)
+
+#note: Homes Powered - Each ton of trash equates to on average 500 kilowatts of electricity.  An average household will use 30 kilowatts per day.
+
+#view(trash_wheel_nhp_df)
+
+trash_wheel_nhp_df = trash_wheel_mr_df %>% 
+  
+  mutate(weight_ton_power = weight_tons*500) %>% 
+  
+  mutate(homes_powered_2 = weight_ton_power/30) %>% 
+  
+  select(-homes_powered) %>% 
+  
+  rename(homes_powered = homes_powered_2) %>% 
+  
+  mutate(year = as.numeric(year)) %>% 
+
+  mutate(trash_wheel_name = "trash_wheel_nhp_mr") %>% 
+  
+  relocate(trash_wheel_name)
+  
+trash_wheel_nhp_df
+
+```
+
+##. iv. Importing, Cleaning, and Organizing Professor Trash Wheel and Gwynnda 
+
+Use a similar process to import, clean, and organize the data for Professor Trash Wheel and Gwynnda, and combine these with the Mr. Trash Wheel dataset to produce a single tidy dataset. To keep track of which Trash Wheel is which, you may need to add an additional variable to all datasets before combining.
+
+###. a. Professor Trash Wheel 
+```{r professor trash wheel}
+#professor trash wheel
+#view(trash_wheel_prof_df)
+
+trash_wheel_prof_df = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 2) %>% 
+  
+  janitor::clean_names() %>% 
+  
+  mutate(month = str_to_lower(month)) %>% 
+  
+  separate(date, into = c("year2", "month2", "day")) %>% 
+  
+  select(-year2, -month2) %>% 
+  
+  relocate(dumpster, year, month, day) %>% 
+  
+  mutate(year = as.numeric(year)) %>% 
+
+  mutate(trash_wheel_name = "trash_wheel_prof") %>% 
+  
+  relocate(trash_wheel_name)
+
+trash_wheel_prof_df
+```
+
+### b. Gwynnda
+
+```{r gwynnda trash wheel}
+#gwynnda trash wheel
+#view(gwynnda_df)
+
+gwynnda_df  = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 4) %>% 
+  
+  janitor::clean_names() %>% 
+  
+  mutate(month = str_to_lower(month)) %>% 
+  
+  separate(date, into = c("year2", "month2", "day")) %>% 
+  
+  select(-year2, -month2)%>% 
+  
+  relocate(dumpster, year, month, day) %>% 
+  
+  mutate(year = as.numeric(year)) %>% 
+
+  mutate(trash_wheel_name = "trash_wheel_gwynnda") %>% 
+  
+  relocate(trash_wheel_name)
+
+gwynnda_df
+```
+
+### c. Trash Wheel Family
+
+```{r trash wheel family}
+#trash wheel family 
+#view(mr_prof_df)
+#view(trash_wheel_family_df)
+
+mr_prof_df = 
+  left_join(trash_wheel_nhp_df, trash_wheel_prof_df)
+
+mr_prof_df
+
+trash_wheel_family_df = 
+  left_join(mr_prof_df, gwynnda_df)
+
+trash_wheel_family_df
+
+```
+
+
+v. Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of cigarette butts collected by Gwynnda in July of 2021?
+
+
+#III. Problem 3
