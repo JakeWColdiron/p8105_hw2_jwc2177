@@ -128,6 +128,7 @@ Fourth, join the datasets by merging snp into pols, and merging unemployment int
 
 ```{r, joining the table together}
 #joining the table together
+#view(five_thirty_eight)
 
 snp_into_pol =
   left_join(pols_df, snp_df)
@@ -143,13 +144,13 @@ five_thirty_eight
 
 Fifth, write a short paragraph about these datasets. Explain briefly what each dataset contained, and describe the resulting dataset (e.g. give the dimension, range of years, and names of key variables).
 
-<br>
+> The pols dataset contained the political compsition of the US Federal Government, the snp dataset contaied the value of the "Standard and Poor" (S&P 500) index and the close of buisness, and the unemployment dataset contained the average unemployment. The key varibales - those that are common throughout all datasets - are year and month as this is a time sequence analysis. Using the key variable, the combined dataset correlates political compsition, the economy as measured by the S&P 500, and unemployment. This was a large dataset, with over 1644 entires ranging from 1947 to 2015, though unemployment data is not tracked until 1948 and S&P 500 value is not tracked until 1950. 
 
 # II. Problem 2
 
 This problem uses the Mr. Trash Wheel data set, available as an Excel file on the course website.
 
-## ii. Import and Clean Mr. Trash Wheel
+## i. Import and Clean Mr. Trash Wheel
 
 Read and clean the Mr. Trash Wheel sheet:
 
@@ -161,11 +162,15 @@ Read and clean the Mr. Trash Wheel sheet:
 #import and clean trash wheel data
 #view(trash_wheel_mr_df)
 
-trash_wheel_mr_df = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 1) %>% 
+trash_wheel_mr_df_omit = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 1) %>% 
+  
+  mutate(id = row_number())
+
+trash_wheel_mr_df = subset(trash_wheel_mr_df_omit, id != 585) %>% 
   
   janitor::clean_names() %>% 
   
-  select(-x15, -x16) %>% 
+  select(-x15, -x16, -id) %>% 
   
   mutate(month = str_to_lower(month)) %>% 
   
@@ -179,24 +184,23 @@ trash_wheel_mr_df = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Coll
   
   mutate(trash_wheel_name = "trash_wheel_mr") %>% 
   
-  relocate(trash_wheel_name)
+  relocate(trash_wheel_name) %>% 
+  
+  mutate(id = row_number())
 
-trash_wheel_df
+trash_wheel_mr_df
 ```
 
 
-##. iii. New Homes Powered
+##. ii. New Homes Powered 
 
 The data include a column for the (approximate) number of homes powered. This calculation is described in the Homes powered note, but not applied to every row in the dataset. Update the data to include a new homes_powered variable based on this calculation.
 
 ```{r new homes powered}
-#new homes powered
-
-#note: new homes powered (nhp)
-
-#note: Homes Powered - Each ton of trash equates to on average 500 kilowatts of electricity.  An average household will use 30 kilowatts per day.
-
+#new homes powered (nhp)
 #view(trash_wheel_nhp_df)
+
+#note: Homes Powered = each ton of trash equates to on average 500 kilowatts of electricity. An average household will use 30 kilowatts per day.
 
 trash_wheel_nhp_df = trash_wheel_mr_df %>% 
   
@@ -218,7 +222,7 @@ trash_wheel_nhp_df
 
 ```
 
-##. iv. Importing, Cleaning, and Organizing Professor Trash Wheel and Gwynnda 
+##. iii.Trash Wheel, Gwynnda, and the Trash Wheel Family
 
 Use a similar process to import, clean, and organize the data for Professor Trash Wheel and Gwynnda, and combine these with the Mr. Trash Wheel dataset to produce a single tidy dataset. To keep track of which Trash Wheel is which, you may need to add an additional variable to all datasets before combining.
 
@@ -227,15 +231,19 @@ Use a similar process to import, clean, and organize the data for Professor Tras
 #professor trash wheel
 #view(trash_wheel_prof_df)
 
-trash_wheel_prof_df = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 2) %>% 
+trash_wheel_prof_df_omit = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 2) %>% 
   
+  mutate(id = row_number())
+
+trash_wheel_prof_df = subset(trash_wheel_prof_df_omit, id != 107) %>% 
+
   janitor::clean_names() %>% 
   
   mutate(month = str_to_lower(month)) %>% 
   
   separate(date, into = c("year2", "month2", "day")) %>% 
   
-  select(-year2, -month2) %>% 
+  select(-year2, -month2, -id) %>% 
   
   relocate(dumpster, year, month, day) %>% 
   
@@ -254,7 +262,13 @@ trash_wheel_prof_df
 #gwynnda trash wheel
 #view(gwynnda_df)
 
-gwynnda_df  = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 4) %>% 
+gwynnda_df_omit = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection Data.xlsx", 4) %>% 
+  
+  mutate(id = row_number())
+
+gwynnda_df_omit_v2 = subset(gwynnda_df_omit, id != 157)
+
+gwynnda_df = subset(gwynnda_df_omit_v2, id != 156) %>% 
   
   janitor::clean_names() %>% 
   
@@ -262,7 +276,7 @@ gwynnda_df  = read_excel("./p8105_hw2_jwc2177_data/202309 Trash Wheel Collection
   
   separate(date, into = c("year2", "month2", "day")) %>% 
   
-  select(-year2, -month2)%>% 
+  select(-year2, -month2, -id)%>% 
   
   relocate(dumpster, year, month, day) %>% 
   
@@ -283,19 +297,94 @@ gwynnda_df
 #view(trash_wheel_family_df)
 
 mr_prof_df = 
-  left_join(trash_wheel_nhp_df, trash_wheel_prof_df)
-
-mr_prof_df
+  bind_rows(trash_wheel_nhp_df, trash_wheel_prof_df)
 
 trash_wheel_family_df = 
-  left_join(mr_prof_df, gwynnda_df)
+  bind_rows(mr_prof_df, gwynnda_df)
 
 trash_wheel_family_df
 
+#verify
+
+tail(trash_wheel_family_df)
 ```
 
 
 v. Write a paragraph about these data; you are encouraged to use inline R. Be sure to note the number of observations in the resulting dataset, and give examples of key variables. For available data, what was the total weight of trash collected by Professor Trash Wheel? What was the total number of cigarette butts collected by Gwynnda in July of 2021?
 
+> 
 
-#III. Problem 3
+
+# III. Problem 3
+
+This problem uses data collected in an observational study to understand the trajectory of Alzheimer’s disease (AD) biomarkers. Study participants were free of Mild Cognitive Impairment (MCI), a stage between the expected cognitive decline of normal aging and the more serious decline of dementia, at the study baseline.
+
+Basic demographic information were measured at the study baseline. The study monitored the development of MCI and recorded the age of MCI onset during the follow-up period, with the last visit marking the end of follow-up. APOE4 is a variant of the apolipoprotein E gene, significantly associated with a higher risk of developing Alzheimer’s disease. The amyloid β 42/40 ratio holds significant promise for diagnosing and predicting disease outcomes. This ratio undergoes changes over time and has been linked to the manifestation of clinical symptoms of Alzheimer’s disease.
+
+# III. Problem 3
+
+## i. Import and Clean and Tidy Baseline
+
+Import, clean, and tidy the dataset of baseline demographics. Ensure that sex and APOE4 carrier status are appropriate encoded (i.e. not numeric), and remove any participants who do not meet the stated inclusion criteria (i.e. no MCI at baseline). 
+
+```{r}
+#view(mci_baseline_full)
+
+mci_baseline_full = read_csv("./p8105_hw2_jwc2177_data/data_mci/MCI_baseline.csv")  
+```
+
+
+```{r import and clean basline data}
+#import and clean basline data
+#view(mci_baseline)
+
+mci_baseline = read_csv("./p8105_hw2_jwc2177_data/data_mci/MCI_baseline.csv", skip = 1)  %>% 
+  
+  janitor::clean_names() %>% 
+  
+  rename(apoe4_carrier_status = apoe4) %>% 
+  
+  rename(onset_age = age_at_onset) %>% 
+  
+  mutate(sex = recode(sex, "0" = "female", "1" = "male")) %>% 
+  
+  mutate(apoe4_carrier_status = recode(apoe4_carrier_status, "0" = "noncarrier", "1" = "carrier"))
+  
+mci_baseline
+```
+
+
+## ii. Dicussion 
+
+Discuss important steps in the import process and relevant features of the dataset. 
+
+1. How many participants were recruited, and of these how many develop MCI? 
+1. What is the average baseline age? What proportion of women in the study are APOE4 carriers?
+
+## i3. Import and Clean and Tidy Amyloid β
+
+Similarly, import, clean, and tidy the dataset of longitudinally observed biomarker values; comment on the steps on the import process and the features of the dataset.
+
+```{r}
+#view(mci_amyloid_full)
+
+mci_amyloid_full = read_csv("./p8105_hw2_jwc2177_data/data_mci/mci_amyloid.csv")  
+```
+
+
+```{r import and clean basline amyloid β}
+#import and clean basline data
+#view(mci_baseline)
+
+mci_amyloid = read_csv("./p8105_hw2_jwc2177_data/data_mci/mci_amyloid.csv", skip = 1)  %>% 
+  
+  janitor::clean_names() 
+  
+
+mci_amyloid
+```
+
+## iii. Cross-Refrenceing Baseline and Amyloid β
+
+Check whether some participants appear in only the baseline or amyloid datasets, and comment on your findings. Combine the demographic and biomarker datasets so that only participants who appear in both datasets are retained, and briefly describe the resulting dataset; export the result as a CSV to your data directory.
+
